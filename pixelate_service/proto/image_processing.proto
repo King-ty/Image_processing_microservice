@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package image_processing;
+
+message ImageUrl {
+  string image_url = 1;
+}
+
+message ProcessingResult {
+  string result = 1;
+}
+
+service GrayscaleService {
+  rpc ProcessImage(ImageUrl) returns (ProcessingResult);
+}
+
+service PixelateService {
+  rpc ProcessImage(ImageUrl) returns (ProcessingResult);
+}
