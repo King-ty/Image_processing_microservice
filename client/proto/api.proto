@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api;
+
+enum ProcessingType {
+  GRAYSCALE = 0;
+  PIXELATE = 1;
+}
+
+service ApiGateway {
+  rpc ProcessImage(ProcessImageRequest) returns (ProcessImageResponse);
+}
+
+message ProcessImageRequest {
+  string image_url = 1;
+  ProcessingType processing_type = 2;
+}
+
+message ProcessImageResponse {
+  string result = 1;
+}
