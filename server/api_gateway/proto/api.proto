@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package gateway;
+package api;
 
 enum ProcessingType {
   GRAYSCALE = 0;
