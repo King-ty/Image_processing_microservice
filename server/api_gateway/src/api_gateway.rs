@@ -12,6 +12,8 @@ pub mod image_processing {
 use gateway::{ProcessImageRequest, ProcessImageResponse, ProcessingType};
 use image_processing::ImageRequest;
 use image_processing::{
+    blur_service_client::BlurServiceClient,
+    // Add new Client here
     grayscale_service_client::GrayscaleServiceClient,
     pixelate_service_client::PixelateServiceClient,
 };
@@ -22,12 +24,15 @@ use tonic::transport::Channel;
 pub struct ApiGatewayImpl {
     grayscale_client: Arc<Mutex<GrayscaleServiceClient<Channel>>>,
     pixelate_client: Arc<Mutex<PixelateServiceClient<Channel>>>,
+    blur_client: Arc<Mutex<BlurServiceClient<Channel>>>,
+    // Add new client here
 }
 
 impl ApiGatewayImpl {
     pub async fn new(
         grayscale_service_addr: String,
         pixelate_service_addr: String,
+        blur_service_addr: String,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let grayscale_client = Arc::new(Mutex::new(
             GrayscaleServiceClient::connect(grayscale_service_addr).await?,
@@ -37,9 +42,17 @@ impl ApiGatewayImpl {
             PixelateServiceClient::connect(pixelate_service_addr).await?,
         ));
 
+        let blur_client = Arc::new(Mutex::new(
+            BlurServiceClient::connect(blur_service_addr).await?,
+        ));
+
+        // Add new client here
+
         Ok(Self {
             grayscale_client,
             pixelate_client,
+            blur_client,
+            // Add new client here
         })
     }
 }
@@ -74,6 +87,14 @@ impl gateway::api_gateway_server::ApiGateway for ApiGatewayImpl {
                     .map_err(|e| Status::internal(format!("Pixelate service error: {}", e)))?;
                 pixelate_response.into_inner().image_data
             }
+            ProcessingType::Blur => {
+                let mut blur_client = self.blur_client.lock().await;
+                let blur_response = blur_client
+                    .blur_image(process_request)
+                    .await
+                    .map_err(|e| Status::internal(format!("Blur service error: {}", e)))?;
+                blur_response.into_inner().image_data
+            } // Add new client here
         };
 
         Ok(Response::new(ProcessImageResponse { result }))
