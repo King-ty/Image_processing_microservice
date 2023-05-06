@@ -2,18 +2,18 @@ syntax = "proto3";
 
 package image_processing;
 
-message ImageUrl {
-  string image_url = 1;
-}
-
-message ProcessingResult {
-  string result = 1;
-}
-
 service GrayscaleService {
-  rpc ProcessImage(ImageUrl) returns (ProcessingResult);
+    rpc GrayscaleImage (ImageRequest) returns (ImageResponse);
 }
 
 service PixelateService {
-  rpc ProcessImage(ImageUrl) returns (ProcessingResult);
+    rpc PixelateImage (ImageRequest) returns (ImageResponse);
+}
+
+message ImageRequest {
+    bytes image_data = 1;
+}
+
+message ImageResponse {
+    bytes image_data = 1;
 }
