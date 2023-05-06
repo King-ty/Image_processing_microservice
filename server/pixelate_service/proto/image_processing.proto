@@ -2,10 +2,6 @@ syntax = "proto3";
 
 package image_processing;
 
-service GrayscaleService {
-    rpc GrayscaleImage (ImageRequest) returns (ImageResponse);
-}
-
 service PixelateService {
     rpc PixelateImage (ImageRequest) returns (ImageResponse);
 }

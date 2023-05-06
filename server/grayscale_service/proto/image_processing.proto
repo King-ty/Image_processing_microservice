@@ -6,10 +6,6 @@ service GrayscaleService {
     rpc GrayscaleImage (ImageRequest) returns (ImageResponse);
 }
 
-service PixelateService {
-    rpc PixelateImage (ImageRequest) returns (ImageResponse);
-}
-
 message ImageRequest {
     bytes image_data = 1;
 }

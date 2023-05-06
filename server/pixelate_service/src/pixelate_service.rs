@@ -38,9 +38,7 @@ impl PixelateService for PixelateServiceImpl {
 
         let mut buffer = Cursor::new(Vec::new());
         if let Err(_) = pixelated_image.write_to(&mut buffer, ImageFormat::Jpeg) {
-            return Err(Status::internal(
-                "Failed to write grayscale image to buffer",
-            ));
+            return Err(Status::internal("Failed to write pixelate image to buffer"));
         }
 
         let resp = ImageResponse {
