@@ -61,5 +61,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Pixelated image saved to {:?}", output_path);
     }
 
+    // test Blur
+    if true {
+        let request = ProcessImageRequest {
+            image_data: image_data.clone(),
+            processing_type: ProcessingType::Blur as i32,
+        };
+
+        let response = client.process_image(request).await?.into_inner();
+
+        let processed_image_data = response.result;
+
+        // Save the processed image
+        let output_path = format!("{}-blur.jpg", &output_path);
+        let mut output_file = File::create(&output_path)?;
+        output_file.write_all(&processed_image_data)?;
+
+        println!("Blurred image saved to {:?}", output_path);
+    }
+
     Ok(())
 }

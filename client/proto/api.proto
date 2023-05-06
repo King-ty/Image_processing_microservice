@@ -5,6 +5,8 @@ package api;
 enum ProcessingType {
   GRAYSCALE = 0;
   PIXELATE = 1;
+  BLUR = 2;
+  // Add new kind here
 }
 
 service ApiGateway {
