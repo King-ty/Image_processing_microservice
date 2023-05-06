@@ -1,32 +1,46 @@
+// use image::{DynamicImage, GenericImageView, ImageError, ImageFormat};
+use image::ImageFormat;
+use image_processing::grayscale_service_server::GrayscaleService;
+use image_processing::{ImageRequest, ImageResponse};
+use std::io::Cursor;
 use tonic::{Request, Response, Status};
 
 pub mod image_processing {
     tonic::include_proto!("image_processing");
 }
 
-use image_processing::{ImageUrl, ProcessingResult};
-
-pub struct GrayscaleService {}
-
-impl Default for GrayscaleService {
-    fn default() -> Self {
-        Self {}
-    }
-}
+#[derive(Default)]
+pub struct GrayscaleServiceImpl;
 
 #[tonic::async_trait]
-impl image_processing::grayscale_service_server::GrayscaleService for GrayscaleService {
-    async fn process_image(
+impl GrayscaleService for GrayscaleServiceImpl {
+    async fn grayscale_image(
         &self,
-        request: Request<ImageUrl>,
-    ) -> Result<Response<ProcessingResult>, Status> {
-        let image_url = request.into_inner().image_url;
+        request: Request<ImageRequest>,
+    ) -> Result<Response<ImageResponse>, Status> {
+        let req = request.into_inner();
 
         // Implement the logic to convert the image to grayscale.
-        // You can use the 'image' crate to perform the conversion.
+        let img = match image::load_from_memory_with_format(&req.image_data, ImageFormat::Png) {
+            Ok(img) => img,
+            Err(_) => {
+                return Err(Status::invalid_argument("Invalid image data or format"));
+            }
+        };
 
-        Ok(Response::new(ProcessingResult {
-            result: "Image converted to grayscale".to_string(),
-        }))
+        let gray_image = img.into_luma8();
+
+        let mut buffer = Cursor::new(Vec::new());
+        if let Err(_) = gray_image.write_to(&mut buffer, ImageFormat::Png) {
+            return Err(Status::internal(
+                "Failed to write grayscale image to buffer",
+            ));
+        }
+
+        let resp = ImageResponse {
+            image_data: buffer.into_inner(),
+        };
+
+        Ok(Response::new(resp))
     }
 }
