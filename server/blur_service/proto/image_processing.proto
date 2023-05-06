@@ -3,14 +3,13 @@ syntax = "proto3";
 package image_processing;
 
 service BlurService {
-    rpc BlurImage (BlurRequest) returns (BlurResponse);
+    rpc BlurImage (ImageRequest) returns (ImageResponse);
 }
 
-message BlurRequest {
+message ImageRequest {
     bytes image_data = 1;
-    float sigma = 2;
 }
 
-message BlurResponse {
+message ImageResponse {
     bytes image_data = 1;
 }

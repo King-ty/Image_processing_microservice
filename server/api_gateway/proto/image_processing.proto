@@ -19,14 +19,5 @@ message ImageResponse {
 }
 
 service BlurService {
-    rpc BlurImage (BlurRequest) returns (BlurResponse);
-}
-
-message BlurRequest {
-    bytes image_data = 1;
-    float sigma = 2;
-}
-
-message BlurResponse {
-    bytes image_data = 1;
+    rpc BlurImage (ImageRequest) returns (ImageResponse);
 }

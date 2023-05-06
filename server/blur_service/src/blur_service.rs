@@ -1,6 +1,6 @@
 use image::ImageFormat;
 use image_processing::blur_service_server::BlurService;
-use image_processing::{BlurRequest, BlurResponse};
+use image_processing::{ImageRequest, ImageResponse};
 use std::io::Cursor;
 use tonic::{Request, Response, Status};
 
@@ -15,8 +15,8 @@ pub struct BlurServiceImpl;
 impl BlurService for BlurServiceImpl {
     async fn blur_image(
         &self,
-        request: Request<BlurRequest>,
-    ) -> Result<Response<BlurResponse>, Status> {
+        request: Request<ImageRequest>,
+    ) -> Result<Response<ImageResponse>, Status> {
         let req = request.into_inner();
 
         // Implement the logic to convert the image to grayscale.
@@ -26,7 +26,9 @@ impl BlurService for BlurServiceImpl {
                 return Err(Status::invalid_argument("Invalid image data or format"));
             }
         };
-        let sigma = req.sigma;
+
+        // TODO: Add sigma logic to gRPC request
+        let sigma = 2.0;
 
         let blurred_image = image::imageops::blur(&img, sigma);
 
@@ -35,7 +37,7 @@ impl BlurService for BlurServiceImpl {
             return Err(Status::internal("Failed to write blurred image to buffer"));
         }
 
-        let resp = BlurResponse {
+        let resp = ImageResponse {
             image_data: buffer.into_inner(),
         };
 
