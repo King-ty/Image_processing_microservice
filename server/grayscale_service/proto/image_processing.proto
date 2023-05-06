@@ -12,7 +12,6 @@ service PixelateService {
 
 message ImageRequest {
     bytes image_data = 1;
-    string image_format = 2;
 }
 
 message ImageResponse {
