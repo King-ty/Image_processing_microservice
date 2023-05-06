@@ -12,10 +12,10 @@ service ApiGateway {
 }
 
 message ProcessImageRequest {
-  string image_url = 1;
+  bytes image_data = 1;
   ProcessingType processing_type = 2;
 }
 
 message ProcessImageResponse {
-  string result = 1;
+  bytes result = 1;
 }
