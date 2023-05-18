@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.process_image(request).await?.into_inner();
 
-        let processed_image_data = response.result;
+        let processed_image_data = response.image_result;
 
         // Save the processed image
         let output_path = format!("{}-grayscale.jpg", &output_path);
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.process_image(request).await?.into_inner();
 
-        let processed_image_data = response.result;
+        let processed_image_data = response.image_result;
 
         // Save the processed image
         let output_path = format!("{}-pixelate.jpg", &output_path);
@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.process_image(request).await?.into_inner();
 
-        let processed_image_data = response.result;
+        let processed_image_data = response.image_result;
 
         // Save the processed image
         let output_path = format!("{}-blur.jpg", &output_path);
@@ -78,6 +78,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         output_file.write_all(&processed_image_data)?;
 
         println!("Blurred image saved to {:?}", output_path);
+    }
+
+    //test Ascii
+    if true {
+        let request = ProcessImageRequest {
+            image_data: image_data.clone(),
+            processing_type: ProcessingType::Ascii as i32,
+        };
+
+        let response = client.process_image(request).await?.into_inner();
+
+        let processed_string_data = response.string_result;
+
+        // Save the processed image
+        let output_path = format!("{}-ascii.txt", &output_path);
+        let mut output_file = File::create(&output_path)?;
+        output_file.write_all(processed_string_data.as_bytes())?;
+
+        println!("Ascii image saved to {:?}", output_path);
     }
 
     Ok(())

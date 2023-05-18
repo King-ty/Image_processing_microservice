@@ -6,6 +6,7 @@ enum ProcessingType {
   GRAYSCALE = 0;
   PIXELATE = 1;
   BLUR = 2;
+  ASCII = 3;
   // Add new kind here
 }
 
@@ -19,5 +20,6 @@ message ProcessImageRequest {
 }
 
 message ProcessImageResponse {
-  bytes result = 1;
+  bytes image_result = 1;
+  string string_result=2;
 }
