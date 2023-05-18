@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package image_processing;
+
+service GrayscaleService {
+  rpc GrayscaleImage(ImageRequest) returns (ImageResponse) {}
+}
+
+service AsciiService {
+  rpc ConvertToAscii(AsciiRequest) returns (AsciiResponse) {}
+}
+
+message ImageRequest {
+  bytes image_data = 1;
+}
+
+message ImageResponse {
+  bytes image_data = 1;
+}
+
+message AsciiRequest {
+  bytes image_data = 1;
+}
+
+message AsciiResponse {
+  string ascii_data = 1;
+}

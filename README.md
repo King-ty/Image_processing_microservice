@@ -25,6 +25,7 @@ An image processing microservice application demo wrote in Rust with tonic.
 
 ## TODO
 - [ ] 添加基于Token的AuthN和AuthZ
+- [ ] 添加TLS
 - [ ] 在API Gateway中加入负载均衡等功能（应该可以替换成Nginx）
 - [ ] README中添加server的依赖关系图
 - [ ] 添加存储功能（上传下载图片？）
@@ -33,3 +34,5 @@ An image processing microservice application demo wrote in Rust with tonic.
 - [ ] 更改地址，目前写死本机地址测试用
 - [ ] 增加读取配置文件的功能
 - [ ] 增加log，至少microservice节点输出点提示...
+- [ ] 添加负载均衡？感觉是不是不需要...
+- [ ] 使用middleware思想，将核心lambda抽离出来
