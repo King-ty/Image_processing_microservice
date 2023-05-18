@@ -21,3 +21,11 @@ message ImageResponse {
 service BlurService {
     rpc BlurImage (ImageRequest) returns (ImageResponse);
 }
+
+service AsciiService {
+  rpc ConvertToAscii(ImageRequest) returns (AsciiResponse) {}
+}
+
+message AsciiResponse {
+  string ascii_data = 1;
+}

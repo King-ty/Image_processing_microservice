@@ -7,7 +7,7 @@ use ascii_service::AsciiServiceImpl;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ascii_address = "[::1]:50056".parse()?;
-    let grayscale_address = "[::1]:50052".to_string();
+    let grayscale_address = "http://[::1]:50052".to_string();
     let ascii_service = AsciiServiceImpl::new(grayscale_address).await?;
     let ascii_server = AsciiServiceServer::new(ascii_service);
 

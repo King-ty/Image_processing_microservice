@@ -9,7 +9,7 @@ pub mod image_processing {
 
 use image_processing::ascii_service_server::AsciiService;
 use image_processing::grayscale_service_client::GrayscaleServiceClient;
-use image_processing::{AsciiRequest, AsciiResponse, ImageRequest};
+use image_processing::{AsciiResponse, ImageRequest};
 
 pub struct AsciiServiceImpl {
     grayscale_client: Arc<Mutex<GrayscaleServiceClient<Channel>>>,
@@ -38,7 +38,7 @@ impl AsciiServiceImpl {
 impl AsciiService for AsciiServiceImpl {
     async fn convert_to_ascii(
         &self,
-        request: Request<AsciiRequest>,
+        request: Request<ImageRequest>,
     ) -> Result<Response<AsciiResponse>, Status> {
         // 获取 ASCII 转换所需的参数和请求数据
         let ascii_request = request.into_inner();
