@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package storage_service;
+
+service StorageService {
+  rpc StoreImage(StoreRequest) returns (StoreResponse) {}
+  rpc GetImage(GetRequest) returns (GetResponse) {}
+}
+
+message StoreRequest {
+  string token = 1;
+  bytes image_data = 2;
+}
+
+message StoreResponse {
+  int32 state = 1;
+  string image_id = 2;
+  string msg = 3;
+}
+
+message GetRequest {
+  string token = 1;
+  string image_id = 2;
+}
+
+message GetResponse {
+  int32 state = 1;
+  bytes image_data = 2;
+  string msg = 3;
+}
