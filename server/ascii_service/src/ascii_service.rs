@@ -8,29 +8,33 @@ pub mod image_processing {
 }
 
 use image_processing::ascii_service_server::AsciiService;
-use image_processing::grayscale_service_client::GrayscaleServiceClient;
-use image_processing::{AsciiResponse, ImageRequest};
+use image_processing::{
+    grayscale_service_client::GrayscaleServiceClient, resize_service_client::ResizeServiceClient,
+};
+use image_processing::{AsciiResponse, ImageRequest, ResizeRequest};
 
 pub struct AsciiServiceImpl {
     grayscale_client: Arc<Mutex<GrayscaleServiceClient<Channel>>>,
+    resize_client: Arc<Mutex<ResizeServiceClient<Channel>>>,
 }
 
 impl AsciiServiceImpl {
     pub async fn new(
         grayscale_service_address: String,
+        resize_service_address: String,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        // let channel = tonic::transport::Channel::from_shared(grayscale_service_address)
-        //     .map_err(|err| format!("Failed to create gRPC channel: {}", err))?
-        //     .connect()
-        //     .await
-        //     .map_err(|err| format!("Failed to connect to gRPC server: {}", err))?;
-        // let grayscale_client = GrayscaleServiceClient::new(channel);
-
         let grayscale_client = Arc::new(Mutex::new(
             GrayscaleServiceClient::connect(grayscale_service_address).await?,
         ));
 
-        Ok(Self { grayscale_client })
+        let resize_client = Arc::new(Mutex::new(
+            ResizeServiceClient::connect(resize_service_address).await?,
+        ));
+
+        Ok(Self {
+            grayscale_client,
+            resize_client,
+        })
     }
 }
 
@@ -42,11 +46,38 @@ impl AsciiService for AsciiServiceImpl {
     ) -> Result<Response<AsciiResponse>, Status> {
         // 获取 ASCII 转换所需的参数和请求数据
         let ascii_request = request.into_inner();
-        let image_request = ImageRequest {
-            image_data: ascii_request.image_data,
+
+        let mut image_data = ascii_request.image_data;
+
+        let origin_image = match image::load_from_memory(&image_data) {
+            Ok(img) => img,
+            Err(_) => {
+                return Err(Status::invalid_argument("Invalid image data or format"));
+            }
         };
 
+        // 如果太大先裁剪
+        let max_width = 256; // 图片最大宽度
+        if origin_image.width() > max_width {
+            let resize_request = ResizeRequest {
+                image_data,
+                max_width,
+            };
+
+            let mut resize_client = self.resize_client.lock().await;
+            let resize_response = resize_client
+                .resize_image(Request::new(resize_request))
+                .await
+                .map_err(|err| {
+                    Status::internal(format!("Failed to call grayscale service: {}", err))
+                })?
+                .into_inner();
+
+            image_data = resize_response.image_data;
+        }
+
         // 调用生成灰度图微服务的方法来获取灰度图像数据
+        let image_request = ImageRequest { image_data };
         let mut grayscale_client = self.grayscale_client.lock().await;
         let grayscale_response = grayscale_client
             .grayscale_image(Request::new(image_request))
