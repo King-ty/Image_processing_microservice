@@ -1,9 +1,9 @@
 use api::api_gateway_client::ApiGatewayClient;
-// use api::{ProcessImageRequest, ProcessImageResponse, ProcessingType};
 use api::{ProcessImageRequest, ProcessingType};
-use std::env;
+use config::Config;
 use std::fs::File;
 use std::io::{Read, Write};
+// use std::env;
 // use std::path::Path;
 // use tonic::transport::Channel;
 
@@ -13,9 +13,15 @@ pub mod api {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server_addr = env::var("API_GATEWAY_ADDR").unwrap_or("http://[::1]:50051".to_string());
-    let image_path = env::var("IMAGE_PATH").unwrap_or("test.jpg".to_string());
-    let output_path = env::var("OUTPUT_PATH").unwrap_or("./output".to_string());
+    let config = Config::builder()
+        .add_source(config::File::with_name("Config"))
+        .build()?;
+    let server_addr = config
+        .get("API_GATEWAY_ADDR")
+        .unwrap_or("http://[::1]:50051".to_string());
+    // let server_addr = env::var("API_GATEWAY_ADDR").unwrap_or("http://[::]:50051".to_string());
+    let image_path = config.get("IMAGE_PATH").unwrap_or("test.jpg".to_string());
+    let output_path = config.get("OUTPUT_PATH").unwrap_or("./output".to_string());
 
     let mut file = File::open(image_path)?;
     let mut image_data = Vec::new();
