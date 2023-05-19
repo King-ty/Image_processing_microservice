@@ -10,14 +10,15 @@ pub mod image_processing {
 
 // use gateway::{ProcessImageRequest, ProcessImageResponse, ProcessingType};
 use gateway::{ProcessImageRequest, ProcessImageResponse, ProcessingType};
-use image_processing::ImageRequest;
 use image_processing::{
     ascii_service_client::AsciiServiceClient,
     blur_service_client::BlurServiceClient,
     // Add new Client here
     grayscale_service_client::GrayscaleServiceClient,
     pixelate_service_client::PixelateServiceClient,
+    resize_service_client::ResizeServiceClient,
 };
+use image_processing::{ImageRequest, ResizeRequest};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
@@ -27,6 +28,7 @@ pub struct ApiGatewayImpl {
     pixelate_client: Arc<Mutex<PixelateServiceClient<Channel>>>,
     blur_client: Arc<Mutex<BlurServiceClient<Channel>>>,
     ascii_client: Arc<Mutex<AsciiServiceClient<Channel>>>,
+    resize_client: Arc<Mutex<ResizeServiceClient<Channel>>>,
     // Add new client here
 }
 
@@ -36,6 +38,7 @@ impl ApiGatewayImpl {
         pixelate_service_addr: String,
         blur_service_addr: String,
         ascii_service_addr: String,
+        resize_service_addr: String,
         // Add new addr here
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let grayscale_client = Arc::new(Mutex::new(
@@ -54,6 +57,10 @@ impl ApiGatewayImpl {
             AsciiServiceClient::connect(ascii_service_addr).await?,
         ));
 
+        let resize_client = Arc::new(Mutex::new(
+            ResizeServiceClient::connect(resize_service_addr).await?,
+        ));
+
         // Add new client here
 
         Ok(Self {
@@ -61,6 +68,7 @@ impl ApiGatewayImpl {
             pixelate_client,
             blur_client,
             ascii_client,
+            resize_client,
             // Add new client here
         })
     }
@@ -112,6 +120,17 @@ impl gateway::api_gateway_server::ApiGateway for ApiGatewayImpl {
                     .await
                     .map_err(|e| Status::internal(format!("Ascii service error: {}", e)))?;
                 (vec![], ascii_response.into_inner().ascii_data)
+            }
+            ProcessingType::Resize => {
+                let mut resize_client = self.resize_client.lock().await;
+                let resize_response = resize_client
+                    .resize_image(ResizeRequest {
+                        image_data: process_request.image_data,
+                        max_width: 256,
+                    })
+                    .await
+                    .map_err(|e| Status::internal(format!("Resize service error: {}", e)))?;
+                (resize_response.into_inner().image_data, "".to_string())
             } // Add new client here
         };
 

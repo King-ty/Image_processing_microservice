@@ -80,6 +80,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Blurred image saved to {:?}", output_path);
     }
 
+    // test Resize
+    if true {
+        let request = ProcessImageRequest {
+            image_data: image_data.clone(),
+            processing_type: ProcessingType::Resize as i32,
+        };
+
+        let response = client.process_image(request).await?.into_inner();
+
+        let processed_image_data = response.image_result;
+
+        // Save the processed image
+        let output_path = format!("{}-resize.jpg", &output_path);
+        let mut output_file = File::create(&output_path)?;
+        output_file.write_all(&processed_image_data)?;
+
+        println!("Resized image saved to {:?}", output_path);
+    }
+
     //test Ascii
     if true {
         let request = ProcessImageRequest {

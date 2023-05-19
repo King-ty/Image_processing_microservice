@@ -11,6 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pixelate_service_addr = "http://[::1]:50053".to_string();
     let blur_service_addr = "http://[::1]:50054".to_string();
     let ascii_service_addr = "http://[::1]:50056".to_string();
+    let resize_service_addr = "http://[::1]:50057".to_string();
     // Add new addr here
 
     let api_gateway = ApiGatewayImpl::new(
@@ -18,6 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         pixelate_service_addr,
         blur_service_addr,
         ascii_service_addr,
+        resize_service_addr,
     )
     .await?;
 
