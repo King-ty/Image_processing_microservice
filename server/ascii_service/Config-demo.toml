@@ -1,0 +1,3 @@
+ascii_addr = "0.0.0.0:50056"
+grayscale_service_addr = "http://0.0.0.0:50052"
+resize_service_addr = "http://0.0.0.0:50057"

@@ -11,9 +11,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_source(config::File::with_name("Config"))
         .build()?;
     let addr = config.get("addr").unwrap_or("[::]:50051".parse()?);
-    // let addr = "[::1]:50051".parse()?;
-    println!("Listening on: {}", addr); // Debug
 
+    // let addr = "[::1]:50051".parse()?;
     // let grayscale_service_addr = "http://[::1]:50052".to_string();
     // let pixelate_service_addr = "http://[::1]:50053".to_string();
     // let blur_service_addr = "http://[::1]:50054".to_string();
@@ -46,6 +45,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         resize_service_addr,
     )
     .await?;
+
+    println!("Listening on: {}", addr); // Debug
 
     Server::builder()
         .add_service(gateway::api_gateway_server::ApiGatewayServer::new(
