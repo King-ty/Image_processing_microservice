@@ -1,5 +1,6 @@
 use image::{imageops, ImageFormat};
 use std::io::Cursor;
+use std::time::Instant;
 use tonic::{Request, Response, Status};
 
 pub mod image_processing {
@@ -18,6 +19,8 @@ impl ResizeService for ResizeServiceImpl {
         &self,
         request: Request<ResizeRequest>,
     ) -> Result<Response<ResizeResponse>, Status> {
+        let start_time = Instant::now();
+
         let req = request.into_inner();
 
         // Load image from bytes
@@ -44,6 +47,9 @@ impl ResizeService for ResizeServiceImpl {
         let resp = ResizeResponse {
             image_data: buffer.into_inner(),
         };
+
+        let duration = Instant::now().duration_since(start_time);
+        println!("{:?}", duration);
 
         Ok(Response::new(resp))
     }

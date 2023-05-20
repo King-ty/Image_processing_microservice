@@ -18,11 +18,11 @@ pub mod api {
 #[command(author, version, about = "Fun with the client", long_about = None)]
 struct CmdOptions {
     /// The number of times to run the test
-    #[arg(short, long, default_value_t = 20)]
+    #[arg(short, long, default_value_t = 50)]
     num_tests: usize,
 
     /// The interval between tests (ms)
-    #[arg(short, long, default_value_t = 10)]
+    #[arg(short, long, default_value_t = 1000)]
     interval: u64,
 
     /// The size of the image to process
@@ -81,10 +81,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = ApiGatewayClient::connect(server_addr).await?;
 
     let processing_type = options.processing_type.clone() as i32;
+    let mut tot_time = 0;
 
     // Run the test
     for i in 0..num_tests {
-        let start = Instant::now();
+        let start_time = Instant::now();
         let request = ProcessImageRequest {
             image_data: image_data.clone(),
             processing_type,
@@ -94,8 +95,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             TestProcessingType::Ascii => response.string_result.into_bytes(),
             _ => response.image_result,
         };
-        let duration = Instant::now().duration_since(start);
+        let duration = Instant::now().duration_since(start_time);
         println!("{}: {:?}", i, duration);
+        tot_time += duration.as_millis();
         sleep(interval).await;
         if i == num_tests - 1 {
             // Save the processed image
@@ -116,6 +118,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Processed image saved to {:?}", output_path);
         }
     }
+
+    println!("Average time: {} ms", tot_time / num_tests as u128);
 
     Ok(())
 }

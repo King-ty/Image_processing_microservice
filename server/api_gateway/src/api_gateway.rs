@@ -1,3 +1,4 @@
+use std::time::Instant;
 use tonic::{Request, Response, Status};
 
 pub mod gateway {
@@ -80,6 +81,8 @@ impl gateway::api_gateway_server::ApiGateway for ApiGatewayImpl {
         &self,
         request: Request<ProcessImageRequest>,
     ) -> Result<Response<ProcessImageResponse>, Status> {
+        let start_time = Instant::now();
+
         let data = request.into_inner();
         let processing_type = data.processing_type;
         let image_data = data.image_data;
@@ -133,6 +136,9 @@ impl gateway::api_gateway_server::ApiGateway for ApiGatewayImpl {
                 (resize_response.into_inner().image_data, "".to_string())
             } // Add new client here
         };
+
+        let duration = Instant::now().duration_since(start_time);
+        println!("{:?}", duration);
 
         Ok(Response::new(ProcessImageResponse {
             image_result,

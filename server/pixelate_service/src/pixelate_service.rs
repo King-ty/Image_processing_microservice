@@ -2,6 +2,7 @@ use image::ImageFormat;
 use image_processing::pixelate_service_server::PixelateService;
 use image_processing::{ImageRequest, ImageResponse};
 use std::io::Cursor;
+use std::time::Instant;
 use tonic::{Request, Response, Status};
 
 pub mod image_processing {
@@ -17,6 +18,8 @@ impl PixelateService for PixelateServiceImpl {
         &self,
         request: Request<ImageRequest>,
     ) -> Result<Response<ImageResponse>, Status> {
+        let start_time = Instant::now();
+
         let req = request.into_inner();
 
         // Implement the logic to convert the image to grayscale.
@@ -44,6 +47,9 @@ impl PixelateService for PixelateServiceImpl {
         let resp = ImageResponse {
             image_data: buffer.into_inner(),
         };
+
+        let duration = Instant::now().duration_since(start_time);
+        println!("{:?}", duration);
 
         Ok(Response::new(resp))
     }

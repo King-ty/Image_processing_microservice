@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
 use tonic::{Request, Response, Status};
@@ -44,6 +45,9 @@ impl AsciiService for AsciiServiceImpl {
         &self,
         request: Request<ImageRequest>,
     ) -> Result<Response<AsciiResponse>, Status> {
+        // 记录开始时间
+        let start_time = Instant::now();
+
         // 获取 ASCII 转换所需的参数和请求数据
         let ascii_request = request.into_inner();
 
@@ -99,6 +103,9 @@ impl AsciiService for AsciiServiceImpl {
         let ascii_response = AsciiResponse {
             ascii_data: ascii_image,
         };
+
+        let duration = Instant::now().duration_since(start_time);
+        println!("{:?}", duration);
 
         Ok(Response::new(ascii_response))
     }
