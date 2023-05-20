@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let interval = Duration::from_millis(options.interval);
     let size = options.size;
 
-    let image_path = format!("{}/Lenna_{}.jpg", image_path, size);
+    let image_path = format!("{}/Lenna_{}.png", image_path, size);
     let mut file = File::open(image_path)?;
     let mut image_data = Vec::new();
     file.read_to_end(&mut image_data)?;
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Save the processed image
             let extension = match options.processing_type {
                 TestProcessingType::Ascii => "txt",
-                _ => "jpg",
+                _ => "png",
             };
             let output_path = format!(
                 "{}/Lenna_{}_{}.{}",
