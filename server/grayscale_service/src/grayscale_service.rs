@@ -24,7 +24,9 @@ impl GrayscaleService for GrayscaleServiceImpl {
         let req = request.into_inner();
 
         // Implement the logic to convert the image to grayscale.
-        let img = match image::load_from_memory(&req.image_data) {
+        let image_data = req.image_data;
+        let img_format = image::guess_format(&image_data).unwrap_or(ImageFormat::Png);
+        let img = match image::load_from_memory(&image_data) {
             Ok(img) => img,
             Err(_) => {
                 return Err(Status::invalid_argument("Invalid image data or format"));
@@ -34,7 +36,7 @@ impl GrayscaleService for GrayscaleServiceImpl {
         let gray_image = img.into_luma8();
 
         let mut buffer = Cursor::new(Vec::new());
-        if let Err(_) = gray_image.write_to(&mut buffer, ImageFormat::Jpeg) {
+        if let Err(_) = gray_image.write_to(&mut buffer, img_format) {
             return Err(Status::internal(
                 "Failed to write grayscale image to buffer",
             ));

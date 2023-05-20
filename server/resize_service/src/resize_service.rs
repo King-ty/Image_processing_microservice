@@ -23,8 +23,9 @@ impl ResizeService for ResizeServiceImpl {
 
         let req = request.into_inner();
 
-        // Load image from bytes
-        let img = match image::load_from_memory(&req.image_data) {
+        let image_data = req.image_data;
+        let img_format = image::guess_format(&image_data).unwrap_or(ImageFormat::Png);
+        let img = match image::load_from_memory(&image_data) {
             Ok(img) => img,
             Err(_) => {
                 return Err(Status::invalid_argument("Invalid image data or format"));
@@ -40,7 +41,7 @@ impl ResizeService for ResizeServiceImpl {
 
         // Encode resized image to bytes
         let mut buffer = Cursor::new(Vec::new());
-        if let Err(_) = resized_img.write_to(&mut buffer, ImageFormat::Jpeg) {
+        if let Err(_) = resized_img.write_to(&mut buffer, img_format) {
             return Err(Status::internal("Failed to write resized image to buffer"));
         }
 
