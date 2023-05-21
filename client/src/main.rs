@@ -18,7 +18,7 @@ pub mod api {
 #[command(author, version, about = "Fun with the client", long_about = None)]
 struct CmdOptions {
     /// The number of times to run the test
-    #[arg(short, long, default_value_t = 50)]
+    #[arg(short, long, default_value_t = 20)]
     num_tests: usize,
 
     /// The interval between tests (ms)
@@ -97,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         let duration = Instant::now().duration_since(start_time);
         println!("{}: {:?}", i, duration);
-        tot_time += duration.as_millis();
+        tot_time += duration.as_micros();
         sleep(interval).await;
         if i == num_tests - 1 {
             // Save the processed image
@@ -119,7 +119,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("Average time: {} ms", tot_time / num_tests as u128);
+    println!(
+        "Average time: {} ms",
+        tot_time as f64 / num_tests as f64 / 1000.0
+    );
 
     Ok(())
 }
