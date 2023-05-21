@@ -96,7 +96,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => response.image_result,
         };
         let duration = Instant::now().duration_since(start_time);
-        println!("{}: {:?}", i, duration);
+        // println!("{}: {:?}", i, duration);
+        println!("{:?}", duration);
         tot_time += duration.as_micros();
         sleep(interval).await;
         if i == num_tests - 1 {
