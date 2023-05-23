@@ -24,6 +24,7 @@ impl BlurService for BlurServiceImpl {
 
         let image_data = req.image_data;
         let img_format = image::guess_format(&image_data).unwrap_or(ImageFormat::Png);
+        // let img = match image::load_from_memory_with_format(&image_data, img_format) {
         let img = match image::load_from_memory(&image_data) {
             Ok(img) => img,
             Err(_) => {
@@ -31,10 +32,14 @@ impl BlurService for BlurServiceImpl {
             }
         };
 
+        // let time1 = Instant::now(); // debug
+
         // TODO: Add sigma logic to gRPC request
-        let sigma = 2.0;
+        let sigma = 5.0;
 
         let blurred_image = image::imageops::blur(&img, sigma);
+
+        // let time2 = Instant::now(); // debug
 
         let mut buffer = Cursor::new(Vec::new());
         if let Err(_) = blurred_image.write_to(&mut buffer, img_format) {
@@ -44,6 +49,15 @@ impl BlurService for BlurServiceImpl {
         let resp = ImageResponse {
             image_data: buffer.into_inner(),
         };
+
+        // let time3 = Instant::now(); // debug
+
+        // println!(
+        //     "t1={:?}, t2={:?}, t3={:?}",
+        //     time1.duration_since(start_time),
+        //     time2.duration_since(time1),
+        //     time3.duration_since(time2)
+        // );
 
         let duration = Instant::now().duration_since(start_time);
         println!("{:?}", duration);
