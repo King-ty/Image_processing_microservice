@@ -16,6 +16,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_source(config::File::with_name("Config"))
         .build()?;
     let addr = config.get("addr").unwrap_or("[::1]:50052".parse()?);
+
+    // 配置tls
     let cert_dir = config
         .get("cert_dir")
         .unwrap_or("./tls/local.pem".to_string());
@@ -36,12 +38,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .identity(server_identity)
         .client_ca_root(client_ca_cert);
 
-    let grayscale_service = GrayscaleServiceImpl::default();
-
+    // 配置中间件
     let layer = tower::ServiceBuilder::new()
         .timeout(Duration::from_micros(1000))
         .layer(tonic::service::interceptor(check_auth))
         .into_inner();
+
+    let grayscale_service = GrayscaleServiceImpl::default();
 
     println!("Listening on: {}", addr); // Debug
 
