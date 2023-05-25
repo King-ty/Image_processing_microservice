@@ -4,3 +4,11 @@ blur_service_addr = "http://0.0.0.0:50054"
 grayscale_service_addr = "http://0.0.0.0:50052"
 pixelate_service_addr = "http://0.0.0.0:50053"
 resize_service_addr = "http://0.0.0.0:50057"
+
+cert_dir = "./tls/local.pem"
+client_ca_dir = "./tls/client_ca.pem"
+key_dir = "./tls/local.key"
+
+client_cert_dir = "./tls/client.pem"
+client_key_dir = "./tls/client.key"
+server_ca_dir = "./tls/server_ca.pem"

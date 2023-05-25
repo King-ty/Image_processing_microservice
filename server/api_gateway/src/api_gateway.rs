@@ -1,5 +1,12 @@
-use std::time::Instant;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
+use tonic::codegen::InterceptedService;
+use tonic::transport::{Channel, ClientTlsConfig};
 use tonic::{Request, Response, Status};
+use tower::timeout::Timeout;
+
+use crate::middleware;
 
 pub mod gateway {
     tonic::include_proto!("api");
@@ -20,16 +27,53 @@ use image_processing::{
     resize_service_client::ResizeServiceClient,
 };
 use image_processing::{ImageRequest, ResizeRequest};
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tonic::transport::Channel;
 
 pub struct ApiGatewayImpl {
-    grayscale_client: Arc<Mutex<GrayscaleServiceClient<Channel>>>,
-    pixelate_client: Arc<Mutex<PixelateServiceClient<Channel>>>,
-    blur_client: Arc<Mutex<BlurServiceClient<Channel>>>,
-    ascii_client: Arc<Mutex<AsciiServiceClient<Channel>>>,
-    resize_client: Arc<Mutex<ResizeServiceClient<Channel>>>,
+    grayscale_client: Arc<
+        Mutex<
+            GrayscaleServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
+    pixelate_client: Arc<
+        Mutex<
+            PixelateServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
+    blur_client: Arc<
+        Mutex<
+            BlurServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
+    ascii_client: Arc<
+        Mutex<
+            AsciiServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
+    resize_client: Arc<
+        Mutex<
+            ResizeServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
     // Add new client here
 }
 
@@ -41,26 +85,53 @@ impl ApiGatewayImpl {
         ascii_service_addr: String,
         resize_service_addr: String,
         // Add new addr here
+        client_tls_config: ClientTlsConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let grayscale_client = Arc::new(Mutex::new(
-            GrayscaleServiceClient::connect(grayscale_service_addr).await?,
-        ));
+        let service_builder = tower::ServiceBuilder::new()
+            .timeout(Duration::from_micros(1000))
+            .layer(tonic::service::interceptor(
+                middleware::insert_auth as fn(Request<()>) -> Result<Request<()>, Status>,
+            ));
 
-        let pixelate_client = Arc::new(Mutex::new(
-            PixelateServiceClient::connect(pixelate_service_addr).await?,
-        ));
+        // grayscale
+        let grayscale_channel = Channel::from_shared(grayscale_service_addr)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let grayscale_channel = service_builder.service(grayscale_channel);
+        let grayscale_client = Arc::new(Mutex::new(GrayscaleServiceClient::new(grayscale_channel)));
 
-        let blur_client = Arc::new(Mutex::new(
-            BlurServiceClient::connect(blur_service_addr).await?,
-        ));
+        // pixelate
+        let pixelate_channel = Channel::from_shared(pixelate_service_addr)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let pixelate_channel = service_builder.service(pixelate_channel);
+        let pixelate_client = Arc::new(Mutex::new(PixelateServiceClient::new(pixelate_channel)));
 
-        let ascii_client = Arc::new(Mutex::new(
-            AsciiServiceClient::connect(ascii_service_addr).await?,
-        ));
+        // blur
+        let blur_channel = Channel::from_shared(blur_service_addr)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let blur_channel = service_builder.service(blur_channel);
+        let blur_client = Arc::new(Mutex::new(BlurServiceClient::new(blur_channel)));
 
-        let resize_client = Arc::new(Mutex::new(
-            ResizeServiceClient::connect(resize_service_addr).await?,
-        ));
+        // ascii
+        let ascii_channel = Channel::from_shared(ascii_service_addr)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let ascii_channel = service_builder.service(ascii_channel);
+        let ascii_client = Arc::new(Mutex::new(AsciiServiceClient::new(ascii_channel)));
+
+        // resize
+        let resize_channel = Channel::from_shared(resize_service_addr)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let resize_channel = service_builder.service(resize_channel);
+        let resize_client = Arc::new(Mutex::new(ResizeServiceClient::new(resize_channel)));
 
         // Add new client here
 
