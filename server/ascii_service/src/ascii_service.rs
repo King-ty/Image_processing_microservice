@@ -46,7 +46,7 @@ impl AsciiServiceImpl {
         client_tls_config: ClientTlsConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let service_builder = tower::ServiceBuilder::new()
-            .timeout(Duration::from_micros(1000))
+            .timeout(Duration::from_millis(1000))
             .layer(tonic::service::interceptor(
                 middleware::insert_auth as fn(Request<()>) -> Result<Request<()>, Status>,
             ));

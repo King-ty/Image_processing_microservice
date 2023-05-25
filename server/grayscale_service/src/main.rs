@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 配置中间件
     let layer = tower::ServiceBuilder::new()
-        .timeout(Duration::from_micros(1000))
+        .timeout(Duration::from_millis(1000))
         .layer(tonic::service::interceptor(check_auth))
         .into_inner();
 

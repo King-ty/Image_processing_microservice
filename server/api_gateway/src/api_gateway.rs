@@ -88,7 +88,7 @@ impl ApiGatewayImpl {
         client_tls_config: ClientTlsConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let service_builder = tower::ServiceBuilder::new()
-            .timeout(Duration::from_micros(1000))
+            .timeout(Duration::from_millis(1000))
             .layer(tonic::service::interceptor(
                 middleware::insert_auth as fn(Request<()>) -> Result<Request<()>, Status>,
             ));
@@ -207,6 +207,7 @@ impl gateway::api_gateway_server::ApiGateway for ApiGatewayImpl {
                 (resize_response.into_inner().image_data, "".to_string())
             } // Add new client here
         };
+
 
         let duration = Instant::now().duration_since(start_time);
         println!("{:?}", duration);

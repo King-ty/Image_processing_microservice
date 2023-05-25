@@ -111,7 +111,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect()
         .await?;
     let channel = tower::ServiceBuilder::new()
-        // .timeout(Duration::from_micros(1000))
+        .timeout(Duration::from_millis(1000))
         .layer(tonic::service::interceptor(middleware::insert_auth))
         .service(channel);
     let mut client = ApiGatewayClient::new(channel);
