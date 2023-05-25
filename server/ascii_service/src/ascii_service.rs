@@ -1,8 +1,12 @@
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use tonic::transport::Channel;
+use tonic::codegen::InterceptedService;
+use tonic::transport::{Channel, ClientTlsConfig};
 use tonic::{Request, Response, Status};
+use tower::timeout::Timeout;
+
+use crate::middleware;
 
 pub mod image_processing {
     tonic::include_proto!("image_processing");
@@ -15,22 +19,57 @@ use image_processing::{
 use image_processing::{AsciiResponse, ImageRequest, ResizeRequest};
 
 pub struct AsciiServiceImpl {
-    grayscale_client: Arc<Mutex<GrayscaleServiceClient<Channel>>>,
-    resize_client: Arc<Mutex<ResizeServiceClient<Channel>>>,
+    grayscale_client: Arc<
+        Mutex<
+            GrayscaleServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
+    resize_client: Arc<
+        Mutex<
+            ResizeServiceClient<
+                Timeout<
+                    InterceptedService<Channel, fn(Request<()>) -> Result<Request<()>, Status>>,
+                >,
+            >,
+        >,
+    >,
 }
 
 impl AsciiServiceImpl {
     pub async fn new(
         grayscale_service_address: String,
         resize_service_address: String,
+        client_tls_config: ClientTlsConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let grayscale_client = Arc::new(Mutex::new(
-            GrayscaleServiceClient::connect(grayscale_service_address).await?,
-        ));
+        let service_builder = tower::ServiceBuilder::new()
+            .timeout(Duration::from_micros(1000))
+            .layer(tonic::service::interceptor(
+                middleware::insert_auth as fn(Request<()>) -> Result<Request<()>, Status>,
+            ));
 
-        let resize_client = Arc::new(Mutex::new(
-            ResizeServiceClient::connect(resize_service_address).await?,
-        ));
+        // grayscale
+        let grayscale_channel = Channel::from_shared(grayscale_service_address)?
+            .tls_config(client_tls_config.clone())?
+            .connect()
+            .await?;
+        let grayscale_channel = service_builder.service(grayscale_channel);
+        let grayscale_client = Arc::new(Mutex::new(GrayscaleServiceClient::new(grayscale_channel)));
+
+        // resize
+        let resize_channel = Channel::from_shared(resize_service_address)?
+            .tls_config(client_tls_config)?
+            .connect()
+            .await?;
+        let resize_channel = service_builder.service(resize_channel);
+        let resize_client = Arc::new(Mutex::new(ResizeServiceClient::new(resize_channel)));
+
+        // let resize_client = Arc::new(Mutex::new(
+        //     ResizeServiceClient::connect(resize_service_address).await?,
+        // ));
 
         Ok(Self {
             grayscale_client,

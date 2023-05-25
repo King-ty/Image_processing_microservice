@@ -1,3 +1,7 @@
 ascii_addr = "0.0.0.0:50056"
 grayscale_service_addr = "http://0.0.0.0:50052"
 resize_service_addr = "http://0.0.0.0:50057"
+
+cert_dir = "./tls/local.pem"
+client_ca_dir = "./tls/client_ca.pem"
+key_dir = "./tls/local.key"
