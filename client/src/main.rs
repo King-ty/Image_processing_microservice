@@ -1,3 +1,5 @@
+mod middleware;
+
 use api::api_gateway_client::ApiGatewayClient;
 use api::ProcessImageRequest;
 use clap::{Parser, ValueEnum};
@@ -6,6 +8,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
+use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 // use std::env;
 // use std::path::Path;
 // use tonic::transport::Channel;
@@ -73,14 +76,46 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let interval = Duration::from_millis(options.interval);
     let size = options.size;
 
+    // 配置客户端tls
+    let server_ca_dir = config
+        .get("server_ca_dir")
+        .unwrap_or("./tls/server_ca.pem".to_string());
+    let client_cert_dir = config
+        .get("client_cert_dir")
+        .unwrap_or("./tls/client.pem".to_string());
+    let client_key_dir = config
+        .get("client_key_dir")
+        .unwrap_or("./tls/client.key".to_string());
+
+    let server_ca_cert = std::fs::read_to_string(server_ca_dir)?;
+    let server_ca_cert = Certificate::from_pem(server_ca_cert);
+    let client_cert = std::fs::read_to_string(client_cert_dir)?;
+    let client_key = std::fs::read_to_string(client_key_dir)?;
+    let client_identity = Identity::from_pem(client_cert, client_key);
+
+    let client_tls = ClientTlsConfig::new()
+        .domain_name("localhost")
+        .ca_certificate(server_ca_cert)
+        .identity(client_identity);
+
     let image_path = format!("{}/Lenna_{}.png", image_path, size);
     let mut file = File::open(image_path)?;
     let mut image_data = Vec::new();
     file.read_to_end(&mut image_data)?;
 
-    let mut client = ApiGatewayClient::connect(server_addr).await?;
-
     let processing_type = options.processing_type.clone() as i32;
+
+    // 创建gRPC客户端
+    let channel = Channel::from_shared(server_addr)?
+        .tls_config(client_tls)?
+        .connect()
+        .await?;
+    let channel = tower::ServiceBuilder::new()
+        // .timeout(Duration::from_micros(1000))
+        .layer(tonic::service::interceptor(middleware::insert_auth))
+        .service(channel);
+    let mut client = ApiGatewayClient::new(channel);
+
     let mut tot_time = 0;
 
     // Run the test
