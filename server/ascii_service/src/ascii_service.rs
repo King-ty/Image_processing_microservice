@@ -99,6 +99,8 @@ impl AsciiService for AsciiServiceImpl {
             }
         };
 
+        let time1 = Instant::now();
+
         // 如果太大先裁剪
         let max_width = 256; // 图片最大宽度
         if origin_image.width() > max_width {
@@ -119,6 +121,8 @@ impl AsciiService for AsciiServiceImpl {
             image_data = resize_response.image_data;
         }
 
+        let time2 = Instant::now();
+
         // 调用生成灰度图微服务的方法来获取灰度图像数据
         let image_request = ImageRequest { image_data };
         let mut grayscale_client = self.grayscale_client.lock().await;
@@ -135,6 +139,8 @@ impl AsciiService for AsciiServiceImpl {
             }
         };
 
+        let time3 = Instant::now();
+
         // 执行 ASCII 转换逻辑，将灰度图像数据转换为 ASCII 字符串
         let ascii_image = convert_to_ascii(grayscale_image.as_bytes(), grayscale_image.width()); // , grayscale_image.height()
 
@@ -143,8 +149,17 @@ impl AsciiService for AsciiServiceImpl {
             ascii_data: ascii_image,
         };
 
-        let duration = Instant::now().duration_since(start_time);
-        println!("{:?}", duration);
+        let time4 = Instant::now();
+        println!(
+            "decode_img: {:?}, resize: {:?}, grayscale: {:?}, ascii: {:?}",
+            time1.duration_since(start_time),
+            time2.duration_since(time1),
+            time3.duration_since(time2),
+            time4.duration_since(time3)
+        );
+
+        // let duration = Instant::now().duration_since(start_time);
+        // println!("{:?}", duration);
 
         Ok(Response::new(ascii_response))
     }
